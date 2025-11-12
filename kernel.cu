@@ -9,54 +9,64 @@
 #include <stdio.h>
 #include "kernel.cuh"
 
-__global__ void mysgemm(int m, int n, int k, const float *A, const float *B, float* C) {
+__global__ void mysgemm(int m, int n, int k, const float *A, const float *B, float *C) {
+	/********************************************************************
+	 *
+	 * Compute C = A x B
+	 *   where A is a (m x k) matrix
+	 *   where B is a (k x n) matrix
+	 *   where C is a (m x n) matrix
+	 *
+	 ********************************************************************/
 
-    /********************************************************************
-     *
-     * Compute C = A x B
-     *   where A is a (m x k) matrix
-     *   where B is a (k x n) matrix
-     *   where C is a (m x n) matrix
-     *
-     ********************************************************************/
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
 
- 
+	if (row < m && col < n) {
+		float acc = 0;
+		for (int i = 0; i < k; i++) {
+			acc += A[row * k + i] * B[i * n + col];
+		}
+		C[row * n + col] = acc;
+	}
 }
 
-void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, const float *A, int lda, const float *B, int ldb, float beta, float *C, int ldc)
-{
-    if ((transa != 'N') && (transa != 'n')) {
-	printf("unsupported value of 'transa'\n");
-    	return;
-    }
+void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, const float *A, int lda,
+                const float *B, int ldb, float beta, float *C, int ldc) {
+	if ((transa != 'N') && (transa != 'n')) {
+		printf("unsupported value of 'transa'\n");
+		return;
+	}
 
-    if ((transb != 'N') && (transb != 'n')) {
-	printf("unsupported value of 'transb'\n");
-	return;
-    }
+	if ((transb != 'N') && (transb != 'n')) {
+		printf("unsupported value of 'transb'\n");
+		return;
+	}
 
-    if ((alpha - 1.0f > 1e-10) || (alpha - 1.0f < -1e-10)) {
-	printf("unsupported value of alpha\n");
-	return;
-    }
+	if ((alpha - 1.0f > 1e-10) || (alpha - 1.0f < -1e-10)) {
+		printf("unsupported value of alpha\n");
+		return;
+	}
 
-    if ((beta - 0.0f > 1e-10) || (beta - 0.0f < -1e-10)) {
-	printf("unsupported value of beta\n");
-	return;
-    }
+	if ((beta - 0.0f > 1e-10) || (beta - 0.0f < -1e-10)) {
+		printf("unsupported value of beta\n");
+		return;
+	}
 
-    // Initialize thread block and kernel grid dimensions ---------------------
+	// Initialize thread block and kernel grid dimensions ---------------------
 
-    const unsigned int BLOCK_SIZE = 16; // Use 16x16 thread blocks
+	const unsigned int BLOCK_SIZE = 16; // Use 16x16 thread blocks
 
-    //INSERT CODE HERE to define thread blocks and layout
- 
-    // Invoke CUDA kernel -----------------------------------------------------
+	//INSERT CODE HERE to define thread blocks and layout
 
-    //INSERT CODE HERE
+	const unsigned int GRID_X = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	const unsigned int GRID_Y = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-  
+	dim3 blockDims(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 gridDims(GRID_X, GRID_Y);
 
+	// Invoke CUDA kernel -----------------------------------------------------
+	mysgemm<<<gridDims, blockDims>>>(m, n, k, A, B, C);
 }
 
 

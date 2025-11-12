@@ -23,7 +23,7 @@
 CC=/usr/bin/g++
 NVCC := $(shell which nvcc)
 CXXFLAGS= -O3 -Wextra -std=c++11
-CUDAFLAGS= --relocatable-device-code=false -gencode arch=compute_89,code=compute_89
+CUDAFLAGS= --relocatable-device-code=false -gencode=arch=compute_89,code=compute_89
 #If you wanted to link any external libraries, they should be listed here, e.g:
 #LIBS= -lopenblas -lpthread -lcudart -lcublas
 #This lib is for the wb package from NVidia_gputeachingkit_labs.
@@ -35,7 +35,7 @@ INCDIRS=-I/usr/local/cuda/include -I/usr/local/include/wb -I./
 #This is the command that will be used to remove file as part of a clean operation
 RM= rm -rf
 
-EXECUTABLE=densemul
+EXECUTABLE=sgemm
 OBJS=main.o kernel.o support.o
 
 

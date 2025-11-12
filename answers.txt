@@ -1,0 +1,55 @@
+segmm output:
+
+```
+[welby@comrademango lab-2-dense-matrix-multiplication-crimsonmagick]$ ./sgemm
+
+Setting up the problem...0.013539 s
+    A: 1000 x 1000
+    B: 1000 x 1000
+    C: 1000 x 1000
+Allocating device variables...0.182641 s
+Copying data from host to device...0.000886 s
+Launching kernel...0.003166 s
+Copying data from device to host...0.001234 s
+Verifying results...TEST PASSED
+
+[welby@comrademango lab-2-dense-matrix-multiplication-crimsonmagick]$ ./sgemm 253
+
+Setting up the problem...0.000940 s
+    A: 253 x 253
+    B: 253 x 253
+    C: 253 x 253
+Allocating device variables...0.184926 s
+Copying data from host to device...0.000089 s
+Launching kernel...0.000287 s
+Copying data from device to host...0.000148 s
+Verifying results...TEST PASSED
+
+[welby@comrademango lab-2-dense-matrix-multiplication-crimsonmagick]$ ./sgemm 1021 953 1638
+
+Setting up the problem...0.017566 s
+    A: 1021 x 953
+    B: 953 x 1638
+    C: 1021 x 1638
+Allocating device variables...0.180395 s
+Copying data from host to device...0.001118 s
+Launching kernel...0.004827 s
+Copying data from device to host...0.001302 s
+Verifying results...TEST PASSED
+
+[welby@comrademango lab-2-dense-matrix-multiplication-crimsonmagick]$
+```
+
+5. 1.
+  * The memory loads of the naive implementation of matrix multiplication corresponds directly to the matrix multiplication algorithm.
+  * Output array C is m x n
+  * Each element of A is reused n times (once per column of C).
+  * Each element of B is reused m times (once per row of C).
+
+5. 2. ;
+  * Memory accesses per thread: 2 * k * 4 bytes = 8k bytes
+  * Computations per thread: 1 multiplication and one add per iteration -> 2k FLOPS
+  * Thus: Memory/Compute = 8k Bytes / 2k FLOPS = 4 Bytes/FLOP
+
+
+This highlights the need for tiling, which cuts down on memory accesses in proportion to its tile size.
