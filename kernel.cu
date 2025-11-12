@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include <stdio.h>
+#include "kernel.cuh"
 
 __global__ void mysgemm(int m, int n, int k, const float *A, const float *B, float* C) {
 

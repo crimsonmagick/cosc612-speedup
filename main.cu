@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "kernel.cuh"
 #include "support.h"
 
 extern __global__ void mysgemm(int m, int n, int k, const float *A, const float *B, float* C);

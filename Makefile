@@ -21,30 +21,22 @@
 #VERSION: 2020.3
 
 CC=/usr/bin/g++
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC := $(shell which nvcc)
 CXXFLAGS= -O3 -Wextra -std=c++11
-CUDAFLAGS= --relocatable-device-code=false -gencode arch=compute_60,code=compute_60 -gencode arch=compute_60,code=sm_60  
+CUDAFLAGS= --relocatable-device-code=false -gencode arch=compute_89,code=compute_89
 #If you wanted to link any external libraries, they should be listed here, e.g:
 #LIBS= -lopenblas -lpthread -lcudart -lcublas
-#This lib is for the wb package from NVidia_gputeachingkit_labs.  
-LIBS= -lwb
+#This lib is for the wb package from NVidia_gputeachingkit_labs.
+LIBS=
 #This indicates additional directories where libraries may be found
 LIBDIRS=-L/usr/local/cuda/lib64
 #This indicates additional directories where include files (".h files") may be found.
-INCDIRS=-I/usr/local/cuda/include -I/usr/local/include/wb
+INCDIRS=-I/usr/local/cuda/include -I/usr/local/include/wb -I./
 #This is the command that will be used to remove file as part of a clean operation
 RM= rm -rf
 
-#Name of the executable
-#You must modify this!!  TODO:  Here's an example:
-#EXECUTABLE= lab0
-EXECUTABLE=
-
-#You must modify this!!  TODO:
-#OBJS should be all the object files that will be linked to form the executable
-#In general this will be a xxx.o for each xxx.cu file.  Example:
-#OBJS=first.o main.o
-OBJS=bogus.o
+EXECUTABLE=densemul
+OBJS=main.o kernel.o support.o
 
 
 #The following could be used in place of the default rule, replacing matrix_cuda with 
