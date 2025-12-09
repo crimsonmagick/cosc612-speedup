@@ -8,6 +8,58 @@
 
 #include <stdio.h>
 #include "kernel.cuh"
+#define TILE_WIDTH 16
+__global__ void matrixMultiplyShared(int m, int n, int k,
+                                     const float *A, const float *B, float *C) {
+	/********************************************************************
+ *
+ * Compute C = A x B
+ *   where A is a (m x k) matrix
+ *   where B is a (k x n) matrix
+ *   where C is a (m x n) matrix
+ *
+ ********************************************************************/
+
+	__shared__ float tileA[TILE_WIDTH][TILE_WIDTH];
+	__shared__ float tileB[TILE_WIDTH][TILE_WIDTH];
+
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
+
+	// Identify the row and column of the C element to work on
+	int cRow = by * TILE_WIDTH + ty;
+	int cCol = bx * TILE_WIDTH + tx;
+
+	float cValue = 0;
+	for (int i = 0; i < (k + TILE_WIDTH - 1) / TILE_WIDTH; ++i) {
+		// Collaborative loading of A and B tiles into shared memory
+		const int aCol = i * TILE_WIDTH + tx;
+		if (cRow < m && aCol < k) {
+			tileA[ty][tx] = A[cRow * k + aCol]; // 1 global read
+		} else {
+			tileA[ty][tx] = 0.0f; // 0 global read
+		}
+		const int bRow = i * TILE_WIDTH + ty;
+		if (cCol < n && bRow < k) {
+			tileB[ty][tx] = B[bRow * n + cCol]; // 1 global read
+		} else {
+			tileB[ty][tx] = 0.0f; // 0 global read
+		}
+		__syncthreads();
+
+		for (int k = 0; k < TILE_WIDTH; ++k) {
+			cValue += tileA[ty][k] * tileB[k][tx];
+		}
+
+		__syncthreads();
+	}
+
+	if (cRow < m && cCol < n) {
+		C[cRow * n + cCol] = cValue; // 1 global write
+	}
+}
 
 __global__ void mysgemm(int m, int n, int k, const float *A, const float *B, float *C) {
 	/********************************************************************
@@ -55,7 +107,7 @@ void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, cons
 
 	// Initialize thread block and kernel grid dimensions ---------------------
 
-	const unsigned int BLOCK_SIZE = 16; // Use 16x16 thread blocks
+	const unsigned int BLOCK_SIZE = TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
 
 	//INSERT CODE HERE to define thread blocks and layout
 
@@ -66,7 +118,7 @@ void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, cons
 	dim3 gridDims(GRID_X, GRID_Y);
 
 	// Invoke CUDA kernel -----------------------------------------------------
-	mysgemm<<<gridDims, blockDims>>>(m, n, k, A, B, C);
+	matrixMultiplyShared<<<gridDims, blockDims>>>(m, n, k, A, B, C);
 }
 
 
