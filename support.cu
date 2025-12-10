@@ -45,6 +45,6 @@ void stopTime(Timer* timer) {
 
 float elapsedTime(Timer timer) {
     return ((float) ((timer.endTime.tv_sec - timer.startTime.tv_sec) \
-                + (timer.endTime.tv_usec - timer.startTime.tv_usec)/1.0e6));
+                + (timer.endTime.tv_usec - timer.startTime.tv_usec)/1.0e3));
 }
 

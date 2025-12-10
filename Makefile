@@ -36,7 +36,7 @@ INCDIRS=-I/usr/local/cuda/include -I/usr/local/include/wb -I./
 RM= rm -rf
 
 EXECUTABLE=sgemm
-OBJS=main.o kernel.o support.o
+OBJS=main.o kernel.o support.o run.o
 
 
 #The following could be used in place of the default rule, replacing matrix_cuda with 

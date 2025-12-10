@@ -49,8 +49,8 @@ __global__ void matrixMultiplyShared(int m, int n, int k,
 		}
 		__syncthreads();
 
-		for (int k = 0; k < TILE_WIDTH; ++k) {
-			cValue += tileA[ty][k] * tileB[k][tx];
+		for (int kk = 0; kk < TILE_WIDTH; ++kk) {
+			cValue += tileA[ty][kk] * tileB[kk][tx];
 		}
 
 		__syncthreads();
