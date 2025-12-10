@@ -17,7 +17,7 @@ extern __global__ void denseMultiply(int m, int n, int k, const float *A, const 
 int main(int argc, char *argv[]) {
   int max_n;
   std::string mode;
-  bool is_dense;
+  Implementation implType;
   if (argc == 3) {
     max_n = atoi(argv[1]);
     mode = argv[2];
@@ -28,9 +28,11 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   if (mode == "tiled") {
-    is_dense = false;
+    implType = tiled;
   } else if (mode == "dense") {
-    is_dense = true;
+    implType = dense;
+  } else if (mode == "serial") {
+    implType = serial;
   } else {
     printf("\n    Invalid mode input parameter: %s!\n", mode.c_str());
     exit(0);
@@ -38,7 +40,7 @@ int main(int argc, char *argv[]) {
   printf("n,time_ms\n");
   int n = 2;
   while (n <= max_n) {
-    run(n, is_dense);
+    run(n, implType);
     n *= 2;
   }
   return 0;

@@ -5,7 +5,7 @@
 #include "support.h"
 
 
-void run(const int n, bool is_dense) {
+void run(const int n, Implementation implType) {
   Timer timer;
   cudaError_t cuda_ret;
 
@@ -51,20 +51,24 @@ void run(const int n, bool is_dense) {
 
   fflush(stdout);
 
-  const unsigned int BLOCK_SIZE = is_dense ? 2: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
-  const unsigned int GRID_X = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  const unsigned int GRID_Y = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim3 blockDims(TILE_WIDTH / 2, TILE_WIDTH); // (8,16) threads per block
+  dim3 gridDims((n + TILE_WIDTH - 1) / TILE_WIDTH,
+                (n + TILE_WIDTH - 1) / TILE_WIDTH);
 
-  dim3 blockDims(BLOCK_SIZE, BLOCK_SIZE);
-  dim3 gridDims(GRID_X, GRID_Y);
+  const unsigned int block_size_dense = 16;
+  dim3 blockDimsDense(block_size_dense, block_size_dense);
+  dim3 gridDimsDense((n + block_size_dense - 1) / block_size_dense,
+                     (n + block_size_dense - 1) / block_size_dense);
 
   startTime(&timer);
-  constexpr int sample_size = 5;
+  constexpr int sample_size = 1;
   for (int i = 0; i < sample_size; i++) {
-    if (is_dense) {
-      denseMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
-    } else {
+    if (implType == dense) {
+      denseMultiply<<<gridDimsDense, blockDimsDense>>>(n, n, n, A_d, B_d, C_d);
+    } else if (implType == tiled) {
       tiledMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+    } else {
+      serialMultiply<<<1, 1>>>(n, n, n, A_d, B_d, C_d);
     }
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
@@ -81,8 +85,10 @@ void run(const int n, bool is_dense) {
   printf("%d,%lld\n", n, elapsedTime(timer) / sample_size);
   fflush(stdout);
 
+
   cudaMemcpy(C_h, C_d, sizeof(float) * C_sz, cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
+  // verify(A_h, B_h, C_h, n, n, n);
 
   free(A_h);
   free(B_h);

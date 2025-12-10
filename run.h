@@ -1,4 +1,9 @@
 #ifndef COSC612_SPEEDUP_RUN_H
 #define COSC612_SPEEDUP_RUN_H
-void run(int n, bool is_dense);
+
+enum Implementation {
+  serial, dense, tiled
+};
+
+void run(int n, Implementation implType);
 #endif
