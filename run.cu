@@ -51,7 +51,7 @@ void run(const int n, bool is_dense) {
 
   fflush(stdout);
 
-  const unsigned int BLOCK_SIZE = is_dense ? 16: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
+  const unsigned int BLOCK_SIZE = is_dense ? 2: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
   const unsigned int GRID_X = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
   const unsigned int GRID_Y = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
