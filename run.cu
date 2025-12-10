@@ -5,7 +5,7 @@
 #include "support.h"
 
 
-void run(int n) {
+void run(const int n, bool is_serial) {
   Timer timer;
   cudaError_t cuda_ret;
 
@@ -18,9 +18,6 @@ void run(int n) {
   float *A_h, *B_h, *C_h;
   float *A_d, *B_d, *C_d;
   size_t A_sz, B_sz, C_sz;
-  unsigned matArow, matAcol;
-  unsigned matBrow, matBcol;
-  dim3 dim_grid, dim_block;
 
   A_sz = n * n;
   B_sz = n * n;
@@ -35,14 +32,6 @@ void run(int n) {
   C_h = (float *) malloc(sizeof(float) * C_sz);
 
   stopTime(&timer);
-  // printf("%f s\n", elapsedTime(timer));
-  // printf("    A: %u x %u\n    B: %u x %u\n    C: %u x %u\n", matArow, matAcol,
-  //        matBrow, matBcol, matArow, matBcol);
-
-  // Allocate device variables ----------------------------------------------
-
-  // printf("Allocating device variables...");
-  // fflush(stdout);
   startTime(&timer);
 
   cudaMalloc(&A_d, sizeof(float) * A_sz);
@@ -51,10 +40,6 @@ void run(int n) {
 
   CHECK_CUDA_RESULT(cudaDeviceSynchronize());
   stopTime(&timer);
-
-  // Copy host variables to device ------------------------------------------
-
-  // printf("Copying data from host to device...");
   fflush(stdout);
   startTime(&timer);
 
@@ -64,38 +49,45 @@ void run(int n) {
   CHECK_CUDA_RESULT(cudaDeviceSynchronize());
   stopTime(&timer);
 
-  // Launch kernel using standard sgemm interface ---------------------------
   fflush(stdout);
-  startTime(&timer);
-  basicSgemm('N', 'N', matArow, matBcol, matBrow, 1.0f,
-             A_d, matArow, B_d, matBrow, 0.0f, C_d, matBrow);
 
-  cuda_ret = cudaDeviceSynchronize();
-  if (cuda_ret != cudaSuccess)
-    FATAL("Unable to launch kernel");
+  const unsigned int BLOCK_SIZE = is_serial ? 16: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
+  const unsigned int GRID_X = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  const unsigned int GRID_Y = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+  dim3 blockDims(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 gridDims(GRID_X, GRID_Y);
+
+  startTime(&timer);
+  constexpr int sample_size = 5;
+  for (int i = 0; i < sample_size; i++) {
+    if (is_serial) {
+      serialMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+    } else {
+      parallelMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+    }
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+      fprintf(stderr, "Kernel launch failed at n=%d, iter=%d: %s\n",
+              n, i, cudaGetErrorString(err));
+      exit(1);
+    }
+    cuda_ret = cudaDeviceSynchronize();
+    if (cuda_ret != cudaSuccess) {
+      FATAL("Unable to launch kernel");
+    }
+  }
   stopTime(&timer);
+  printf("%d,%lld\n", n, elapsedTime(timer) / sample_size);
+  fflush(stdout);
 
-  // Copy device variables from host ----------------------------------------
-
-  // printf("Copying data from device to host...");
-  // fflush(stdout);
-  startTime(&timer);
-
-  //INSERT CODE HERE
   cudaMemcpy(C_h, C_d, sizeof(float) * C_sz, cudaMemcpyDeviceToHost);
-
   cudaDeviceSynchronize();
-  stopTime(&timer);
-  printf("%d,%f\n", matArow, elapsedTime(timer));
-  fflush(stdout);
-
-  // Free memory ------------------------------------------------------------
 
   free(A_h);
   free(B_h);
   free(C_h);
 
-  //INSERT CODE HERE
   cudaFree(A_d);
   cudaFree(B_d);
   cudaFree(C_d);

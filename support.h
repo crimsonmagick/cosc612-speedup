@@ -23,7 +23,7 @@ void verify(float *A, float *B, float *C, unsigned int m, unsigned int k,
   unsigned int n);
 void startTime(Timer* timer);
 void stopTime(Timer* timer);
-float elapsedTime(Timer timer);
+long long elapsedTime(Timer timer);
 #ifdef __cplusplus
 }
 #endif

@@ -1,5 +1,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
-void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, const float *A, int lda, const float *B, int ldb, float beta, float *C, int ldc);
+#define TILE_WIDTH 32
+__global__ void serialMultiply(int m, int n, int k, const float *A, const float *B, float *C);
 
+__global__ void parallelMultiply(int m, int n, int k, const float *A, const float *B, float *C);
 #endif
