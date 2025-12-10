@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include "kernel.cuh"
-__global__ void parallelMultiply(int m, int n, int k,
+__global__ void tiledMultiply(int m, int n, int k,
                                      const float *A, const float *B, float *C) {
 	/********************************************************************
  *
@@ -61,7 +61,7 @@ __global__ void parallelMultiply(int m, int n, int k,
 	}
 }
 
-__global__ void serialMultiply(int m, int n, int k, const float *A, const float *B, float *C) {
+__global__ void denseMultiply(int m, int n, int k, const float *A, const float *B, float *C) {
 	/********************************************************************
 	 *
 	 * Compute C = A x B

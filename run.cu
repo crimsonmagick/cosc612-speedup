@@ -5,7 +5,7 @@
 #include "support.h"
 
 
-void run(const int n, bool is_serial) {
+void run(const int n, bool is_dense) {
   Timer timer;
   cudaError_t cuda_ret;
 
@@ -51,7 +51,7 @@ void run(const int n, bool is_serial) {
 
   fflush(stdout);
 
-  const unsigned int BLOCK_SIZE = is_serial ? 16: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
+  const unsigned int BLOCK_SIZE = is_dense ? 16: TILE_WIDTH; // Use 16x16 thread blocks, same as tile size
   const unsigned int GRID_X = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
   const unsigned int GRID_Y = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
@@ -61,10 +61,10 @@ void run(const int n, bool is_serial) {
   startTime(&timer);
   constexpr int sample_size = 5;
   for (int i = 0; i < sample_size; i++) {
-    if (is_serial) {
-      serialMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+    if (is_dense) {
+      denseMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
     } else {
-      parallelMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+      tiledMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
     }
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {

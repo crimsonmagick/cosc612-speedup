@@ -12,12 +12,12 @@
 
 #include "run.h"
 
-extern __global__ void serialMultiply(int m, int n, int k, const float *A, const float *B, float *C);
+extern __global__ void denseMultiply(int m, int n, int k, const float *A, const float *B, float *C);
 
 int main(int argc, char *argv[]) {
   int max_n;
   std::string mode;
-  bool is_serial;
+  bool is_dense;
   if (argc == 3) {
     max_n = atoi(argv[1]);
     mode = argv[2];
@@ -27,10 +27,10 @@ int main(int argc, char *argv[]) {
       "\n");
     exit(0);
   }
-  if (mode == "parallel") {
-    is_serial = false;
-  } else if (mode == "serial") {
-    is_serial = true;
+  if (mode == "tiled") {
+    is_dense = false;
+  } else if (mode == "dense") {
+    is_dense = true;
   } else {
     printf("\n    Invalid mode input parameter: %s!\n", mode.c_str());
     exit(0);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
   printf("n,time_ms\n");
   int n = 2;
   while (n <= max_n) {
-    run(n, is_serial);
+    run(n, is_dense);
     n *= 2;
   }
   return 0;
