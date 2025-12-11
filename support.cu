@@ -34,16 +34,16 @@ void verify(float *A, float *B, float *C, unsigned int m, unsigned int k,
 }
 
 void startTime(Timer *timer) {
-  gettimeofday(&(timer->startTime), NULL);
+  clock_gettime(CLOCK_MONOTONIC, &(timer->startTime));
 }
 
 void stopTime(Timer *timer) {
-  gettimeofday(&(timer->endTime), NULL);
+  clock_gettime(CLOCK_MONOTONIC, &(timer->endTime));
 }
 
-long long elapsedTime(Timer timer) {
-  const long long sec = timer.endTime.tv_sec - timer.startTime.tv_sec;
-  const long long usec = timer.endTime.tv_usec - timer.startTime.tv_usec;
-  return sec * 1000LL + usec / 1000LL;
+// Return elapsed time in microseconds as a double
+double elapsedTime(Timer timer) {
+  double sec  = (double)(timer.endTime.tv_sec - timer.startTime.tv_sec);
+  double nsec = (double)(timer.endTime.tv_nsec - timer.startTime.tv_nsec);
+  return sec * 1000000.0 + nsec / 1e3;     // ms
 }
-

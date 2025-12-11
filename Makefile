@@ -35,7 +35,7 @@ INCDIRS=-I/usr/local/cuda/include -I/usr/local/include/wb -I./
 #This is the command that will be used to remove file as part of a clean operation
 RM= rm -rf
 
-EXECUTABLE=sgemm
+EXECUTABLE=speedup
 OBJS=main.o kernel.o support.o run.o
 
 

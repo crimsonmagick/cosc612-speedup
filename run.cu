@@ -61,33 +61,35 @@ void run(const int n, Implementation implType) {
                      (n + block_size_dense - 1) / block_size_dense);
 
   startTime(&timer);
-  constexpr int sample_size = 1;
+  const int sample_size = implType == serial ? 1 : 10;
   for (int i = 0; i < sample_size; i++) {
     if (implType == dense) {
       denseMultiply<<<gridDimsDense, blockDimsDense>>>(n, n, n, A_d, B_d, C_d);
     } else if (implType == tiled) {
       tiledMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
+    } else if (implType == coarse) {
+      coarsenedMultiply<<<gridDims, blockDims>>>(n, n, n, A_d, B_d, C_d);
     } else {
-      serialMultiply<<<1, 1>>>(n, n, n, A_d, B_d, C_d);
+      serialHostMultiply(n, n, n, A_h, B_h, C_h);
     }
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-      fprintf(stderr, "Kernel launch failed at n=%d, iter=%d: %s\n",
-              n, i, cudaGetErrorString(err));
-      exit(1);
-    }
-    cuda_ret = cudaDeviceSynchronize();
-    if (cuda_ret != cudaSuccess) {
-      FATAL("Unable to launch kernel");
-    }
+    // cudaError_t err = cudaGetLastError();
+    // if (err != cudaSuccess) {
+    //   fprintf(stderr, "Kernel launch failed at n=%d, iter=%d: %s\n",
+    //           n, i, cudaGetErrorString(err));
+    //   exit(1);
+    // }
+    // cuda_ret = cudaDeviceSynchronize();
+    // if (cuda_ret != cudaSuccess) {
+    //   FATAL("Unable to launch kernel");
+    // }
   }
   stopTime(&timer);
-  printf("%d,%lld\n", n, elapsedTime(timer) / sample_size);
+  printf("%d,%.2f\n", n, elapsedTime(timer) / sample_size);
   fflush(stdout);
 
 
   cudaMemcpy(C_h, C_d, sizeof(float) * C_sz, cudaMemcpyDeviceToHost);
-  cudaDeviceSynchronize();
+  // cudaDeviceSynchronize();
   // verify(A_h, B_h, C_h, n, n, n);
 
   free(A_h);

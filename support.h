@@ -11,9 +11,10 @@
 
 #include <sys/time.h>
 
+
 typedef struct {
-    struct timeval startTime;
-    struct timeval endTime;
+	struct timespec startTime;
+	struct timespec endTime;
 } Timer;
 
 #ifdef __cplusplus
@@ -23,7 +24,7 @@ void verify(float *A, float *B, float *C, unsigned int m, unsigned int k,
   unsigned int n);
 void startTime(Timer* timer);
 void stopTime(Timer* timer);
-long long elapsedTime(Timer timer);
+double elapsedTime(Timer timer);
 #ifdef __cplusplus
 }
 #endif

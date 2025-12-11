@@ -33,11 +33,13 @@ int main(int argc, char *argv[]) {
     implType = dense;
   } else if (mode == "serial") {
     implType = serial;
+  } else if (mode == "coarse") {
+    implType = coarse;
   } else {
     printf("\n    Invalid mode input parameter: %s!\n", mode.c_str());
     exit(0);
   }
-  printf("n,time_ms\n");
+  printf("n,time_us\n");
   int n = 2;
   while (n <= max_n) {
     run(n, implType);
